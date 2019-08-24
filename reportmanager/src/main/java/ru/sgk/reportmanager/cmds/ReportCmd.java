@@ -130,6 +130,16 @@ public class ReportCmd implements CommandExecutor
 								sender.sendMessage(Configuration.getString(config, "messages.response-sended").replaceAll("%id%", id+""));
 									Report.notifyPlayer(id);
 
+								for (Player player : Bukkit.getOnlinePlayers())
+								{
+									ByteArrayDataOutput out = ByteStreams.newDataOutput();
+									
+									out.writeUTF("report.reply");
+									out.writeLong(id);
+									
+									player.sendPluginMessage(ReportManager.getInstance(), "BungeeCord", out.toByteArray());
+									break;
+								}
 							}
 							else sender.sendMessage(Configuration.getString(config, "messages.wrong-id").replaceAll("%id%", args[1]));
 						}
@@ -224,6 +234,16 @@ public class ReportCmd implements CommandExecutor
 					long id = SQLManager.Requests.sendReport(sender.getName(), args[0], texts, toPlayer);
 					sender.sendMessage(Configuration.getString(config, "messages.report-sended").replaceAll("%id%", "" + id));
 					Report.notifyAdmin(id);
+					for (Player player : Bukkit.getOnlinePlayers())
+					{
+						ByteArrayDataOutput out = ByteStreams.newDataOutput();
+						
+						out.writeUTF("report.send");
+						out.writeLong(id);
+						
+						player.sendPluginMessage(ReportManager.getInstance(), "BungeeCord", out.toByteArray());
+						break;
+					}
 					return true;
 				}
 				else

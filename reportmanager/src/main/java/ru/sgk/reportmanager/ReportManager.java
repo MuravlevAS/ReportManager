@@ -29,6 +29,8 @@ public class ReportManager extends JavaPlugin
 		
     	config = Configuration.load("config.yml");
 
+    	getServer().getMessenger().registerIncomingPluginChannel(instance, "BungeeCord", new Messenger());
+    	getServer().getMessenger().registerOutgoingPluginChannel(instance, "BungeeCord");
     	
     	getCommand("report").setExecutor(new ReportCmd(config));
     	getCommand("reportmanager").setExecutor(new ReportManagerCmd(config));
