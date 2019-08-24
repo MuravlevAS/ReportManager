@@ -1,0 +1,12 @@
+main: ru.sgk.reportmanager.ReportManager
+name: ReportManager
+version: 0.0.1-SNAPSHOT
+author: SteveGrKek
+commands:
+  report:
+    usage: '/report - to get help'
+
+  reportmanager:
+    desc: 'for server developer'
+    aliases: [rm]
+    usage: '/<command> reload'
