@@ -10,7 +10,6 @@ import ru.sgk.reportmanager.bungee.Messenger;
 import ru.sgk.reportmanager.cmds.ReportCmd;
 import ru.sgk.reportmanager.cmds.ReportManagerCmd;
 import ru.sgk.reportmanager.data.Configuration;
-import ru.sgk.reportmanager.data.SQLManager;
 import ru.sgk.reportmanager.data.MySQLManager;
 import ru.sgk.reportmanager.events.MainEvents;
 
