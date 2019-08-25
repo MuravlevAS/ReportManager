@@ -166,7 +166,11 @@ public class Report {
 	{
 		player.sendMessage(Configuration.getString(ReportManager.getInstance().getConfig(), "messages.notification"));
 	}
-	
+
+	/**
+	 * 
+	 * @param id
+	 */
 	public static void notifyPlayer(long id)
 	{
 		Runnable task = () ->

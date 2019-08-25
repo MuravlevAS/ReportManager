@@ -50,15 +50,18 @@ public class ReportCmd implements CommandExecutor
 			
 			if (args.length >= 1)
 			{
+				// sends to player list of all his reports
 				if (args[0].equalsIgnoreCase("-mylist"))
 				{
-					List<Report> reportList = null;
 
 					if (!hasPermission(sender, "reportmanager.usr.list"))
 					{
 						sender.sendMessage("§cНедостаточно прав.");
 						return true;
 					}
+					Runnable task = () ->
+					{
+						List<Report> reportList = null;
 						if (args.length == 2)
 						{
 							try
@@ -67,46 +70,55 @@ public class ReportCmd implements CommandExecutor
 							}
 							catch (NumberFormatException e)
 							{
+								
 								sender.sendMessage("§cНеправильный аргумент. Использование команды: §f/report -mylist [страница]");
-								return true;
+								return;
 							}
 						}
 						else if (args.length == 1)
 						{
 							reportList = SQLManager.Requests.getPlayerReports(sender.getName(), 1);
 						}
-					
-
-					Report.printReportList(sender, reportList);
+						Report.printReportList(sender, reportList);
+					};
+					new Thread(task).start();
+					return true;
 				}
+				// Sends list of reports that were not responded.
+				// Using only for admin.
 				else if (args[0].equalsIgnoreCase("-list"))
 				{
 					
-					List<Report> reportList = null;
 					if (!hasPermission(sender, "reportmanager.admin"))
 					{
 						sender.sendMessage("§cНедостаточно прав.");
 						return true;
 					}
-					if (args.length == 2)
+					Runnable task = ()->
 					{
-						try
+						List<Report> reportList = null;
+						if (args.length == 2)
 						{
-							reportList = SQLManager.Requests.getReports(Integer.parseInt(args[1]));
+							try
+							{
+								reportList = SQLManager.Requests.getReports(Integer.parseInt(args[1]));
+							}
+							catch (NumberFormatException e)
+							{
+								sender.sendMessage("§cНеправильный аргумент. Использование команды: §f/report -list [страница]");
+								return;
+							}
 						}
-						catch (NumberFormatException e)
+						else if (args.length == 1)
 						{
-							sender.sendMessage("§cНеправильный аргумент. Использование команды: §f/report -list [страница]");
-							return true;
+							reportList = SQLManager.Requests.getReports(1);
 						}
-					}
-					else if (args.length == 1)
-					{
-						reportList = SQLManager.Requests.getReports(1);
-					}
-					Report.printReportList(sender, reportList);
+						Report.printReportList(sender, reportList);
+					};
+					new Thread(task).start();
 					return true;
 				}
+				// Send response on report
 				else if (args[0].equalsIgnoreCase("-reply"))
 				{
 					if (!sender.hasPermission("reportmanager.admin"))
@@ -123,13 +135,15 @@ public class ReportCmd implements CommandExecutor
 						try 
 						{
 							int id = Integer.parseInt(args[1]);
+							// If db request has update at least one line, send notification to the player who sended report
+							// and response to admint that all was successful. Otherwise send admin 
 							boolean responded = SQLManager.Requests.sendResponse(id, s, sender.getName());
 							if (responded)
 							{
 								 
 								sender.sendMessage(Configuration.getString(config, "messages.response-sended").replaceAll("%id%", id+""));
 									Report.notifyPlayer(id);
-
+								// Notify player that send that report about respond on his report.
 								for (Player player : Bukkit.getOnlinePlayers())
 								{
 									ByteArrayDataOutput out = ByteStreams.newDataOutput();
@@ -141,16 +155,20 @@ public class ReportCmd implements CommandExecutor
 									break;
 								}
 							}
+							// send error-message
 							else sender.sendMessage(Configuration.getString(config, "messages.wrong-id").replaceAll("%id%", args[1]));
 						}
+						// send message about bad number format.
 						catch (Exception e) {sender.sendMessage("§cid должен содержать только целые числа!");}
 						return true;
 					}
 					else 
 					{
+						// send usage if command was put not properly
 						sender.sendMessage("§cИспользование команды: /report -reply <id> <Ответ>");
 					}
 				}
+				// getting report
 				else if (args[0].equalsIgnoreCase("-get"))
 				{
 					if (args.length < 2)
@@ -163,6 +181,8 @@ public class ReportCmd implements CommandExecutor
 					{
 						int id = Integer.parseInt(args[1]);
 						Report report = SQLManager.Requests.getReport(id);
+						// if player is not admin then, if he has permission, he can get ONLY his reports,
+						// others will give not permission meessage   
 						if (!hasPermission(sender, "reportmanager.admin"))
 						{
 							if (report.getReporterPlayerName().equals(sender.getName()))
@@ -211,6 +231,7 @@ public class ReportCmd implements CommandExecutor
 						return true;
 					}
 				}
+				// perform report sending
 				else if (args.length >= 2)
 				{
 					if (!hasPermission(sender, "reportmanager.usr.report"))
