@@ -28,7 +28,7 @@ public class MySQLManager
 		 */
 		public static void createTable()
 		{
-			PreparedStatement ps = getStatement(
+			sendRequest(
 					  "CREATE TABLE IF NOT EXISTS `reportmanager`("
 					+ "`id` INT(8) PRIMARY KEY AUTO_INCREMENT,"
 					+ "`responded` BOOLEAN DEFAULT FALSE,"
@@ -39,15 +39,6 @@ public class MySQLManager
 					+ "`response` TEXT,"
 					+ "`checked` BOOLEAN DEFAULT FALSE,"
 					+ "`text` TEXT) Engine=InnoDB DEFAULT CHARSET=utf8;");
-			try 
-			{
-				ps.execute();
-				ps.close();
-			}
-			catch (SQLException e) 
-			{
-				e.printStackTrace();
-			}
 		}
 		
 		/**
@@ -58,13 +49,9 @@ public class MySQLManager
 		 */
 		public static List<Report> getPlayerReports(String playername, int index)
 		{
-			PreparedStatement ps = getStatement("SELECT * FROM `reportmanager` WHERE `reporter_player_name` = ? ORDER BY `id` DESC limit ?, 5");
-			try 
+			
+			try (ResultSet rs = getResult("SELECT * FROM `reportmanager` WHERE `reporter_player_name` = ? ORDER BY `id` DESC limit ?, 5", playername, index-1))
 			{
-				ps.setString(1, playername);
-				ps.setInt(2, index-1);
-				ps.execute();
-				ResultSet rs = ps.getResultSet();
 
 				List<Report> reportList = new ArrayList<Report>();
 				
@@ -82,8 +69,6 @@ public class MySQLManager
 					reportList.add(new Report(id, responded, reporter, reported, toPlayer, text, response, responder));
 				}
 				
-				rs.close();
-				ps.close();
 				return index != 1 && reportList.isEmpty() ? null : reportList;
 			}
 			catch (SQLException e) { e.printStackTrace(); }
@@ -99,20 +84,8 @@ public class MySQLManager
 		 */
 		public static boolean sendResponse(int id, String str, String responder)
 		{
-			try 
-			{
-				PreparedStatement ps = getStatement("UPDATE `reportmanager` SET `response` = ?, `responder` = ?, `responded` = TRUE, `checked` = FALSE where id = ?");
-				ps.setString(1, str);
-				ps.setString(2, responder);
-				ps.setInt(3, id);
-				int upd = ps.executeUpdate();
-				ps.close();
-				return upd > 0;
-			}
-			catch (SQLException e) 
-			{
-			}
-			return false;
+				return sendUpdate("UPDATE `reportmanager` SET `response` = ?, `responder` = ?, `responded` = TRUE, `checked` = FALSE where id = ?"
+						, str, responder, id) > 0;
 		}
 		
 		/**
@@ -124,60 +97,42 @@ public class MySQLManager
 		 */
 		public static long sendReport(String reporter, String reported, List<String> text, boolean toPlayer)
 		{
-			
-			PreparedStatement ps = getStatement("INSERT INTO `reportmanager`(`reporter_player_name`, `reported_player_name`, `text`, `to_player`) VALUES (?, ?, ?, ?)");
-			
 			StringBuilder sb = new StringBuilder();
 			for (String s : text)
 			{
 				sb.append(s + "\n");
 			}
-			
-			try 
-			{
-				ps.setString(1, reporter);
-				ps.setString(2, reported);
-				ps.setString(3, sb.toString());
-				ps.setBoolean(4, toPlayer);
-				ps.execute();
-				ps.close();
-				ps = getStatement("SELECT * FROM `reportmanager` WHERE `reporter_player_name` = ? ORDER BY id DESC LIMIT 1");
-				ps.setString(1, reporter);
-				ps.execute();
-				ResultSet rs = ps.getResultSet();
-				rs.next();
-				int i = rs.getInt("id");
-				rs.close();
-				ps.close();
-				return i;
-			}
-			catch (SQLException e) 
-			{
-				e.printStackTrace();
-			}
+				
+				sendRequest("INSERT INTO `reportmanager`(`reporter_player_name`, `reported_player_name`, `text`, `to_player`) VALUES (?, ?, ?, ?)",
+						reporter,
+						reported,
+						sb.toString(),
+						toPlayer);
+				
+				try (ResultSet rs = getResult("SELECT * FROM `reportmanager` WHERE `reporter_player_name` = ? ORDER BY id DESC LIMIT 1", reporter))
+				{
+					rs.next();
+					int i = rs.getInt("id");
+					
+					return i;
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			return -1;
 		}
 		public static boolean checkReport(long id)
 		{
-			PreparedStatement ps = getStatement("UPDATE `reportmanager` SET `checked` = TRUE WHERE `id` = ?");
-			try {
-				ps.setLong(1, id);
-				ps.execute();
+			if (sendUpdate("UPDATE `reportmanager` SET `checked` = TRUE WHERE `id` = ?", id) > 0)
 				return true;
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
 			return false;
 		}
 		public static Report getReport(long id)
 		{
-			PreparedStatement ps = getStatement("SELECT * FROM `reportmanager` WHERE id = ?");
-			ResultSet rs = null;
-			try 
+			
+			
+			try (ResultSet rs = getResult("SELECT * FROM `reportmanager` WHERE id = ?", 1)) 
 			{
-				ps.setLong(1, id);
-				ps.execute();
-				rs = ps.getResultSet();
 				if (rs.next())
 				{
 					String reporter = rs.getString("reporter_player_name");
@@ -190,18 +145,15 @@ public class MySQLManager
 					boolean checked = rs.getBoolean("checked");
 					
 
-					rs.close();
-					ps.close();	
 					Report report = new Report(id, responded, reporter, reported, toPlayer, text, response, responder);
 					report.setChecked(checked);
 					return report;
 				}
 				
-			}
-			catch (SQLException e) 
-			{
+			} catch (SQLException e) {
 				e.printStackTrace();
-			}return null;
+			}
+			return null;
 		}
 		
 		/** 
@@ -211,13 +163,10 @@ public class MySQLManager
 		public static List<Report> getReports(int index)
 		{
 			int from = (index-1)*5;
-			PreparedStatement ps = getStatement("SELECT * FROM `reportmanager` WHERE `responded` = FALSE ORDER BY id LIMIT ?, 5");
-			ResultSet rs = null;
-			try 
+			
+			
+			try (ResultSet rs = getResult("SELECT * FROM `reportmanager` WHERE `responded` = FALSE ORDER BY id LIMIT ?, 5", from)) 
 			{
-				ps.setInt(1, from);
-				ps.execute();
-				rs = ps.getResultSet();
 				List<Report> reportList = new ArrayList<Report>();
 				
 				while (rs.next())
@@ -234,9 +183,6 @@ public class MySQLManager
 					reportList.add(new Report(id, responded, reporter, reported, toPlayer, text, response, responder));
 				}
 				
-				rs.close();
-				ps.close();
-				
 				return index != 1 && reportList.isEmpty() ? null : reportList;
 				
 			}
@@ -245,6 +191,60 @@ public class MySQLManager
 				e.printStackTrace();
 			}
 			return null;
+		}
+	}
+	/**
+	 * Sends any request to db
+	 * @param request - request
+	 */
+	private static void sendRequest(String request, Object... args)
+	{
+		try(PreparedStatement ps = getStatement(request))
+		{
+			for (int i = 0; i < args.length; i++)
+			{
+				ps.setObject(i+1, args[i]);
+			}
+			ps.execute();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * Send here only request such as INSERT, UPDATE or DELETE.
+	 * @param request - request 
+	 * @return either (1) the row count for SQL Data Manipulation Language (DML) statementsor (2) 0 for SQL statements that return nothing
+	 */
+	private static int sendUpdate(String request, Object... args)
+	{
+		try(PreparedStatement ps = getStatement(request))
+		{
+			for (int i = 0; i < args.length; i++)
+			{
+				ps.setObject(i+1, args[i]);
+			}
+			return ps.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
+	/**
+	 * <b>Note:</b> always call method ResultSet.close() in the end of your code with this method, or using Autocloselable (try-with-resources) statement 
+	 * @param request - request
+	 * @return ResultSet which correspond to request; 
+	 */
+	private static ResultSet getResult(String request, Object... args) throws SQLException  
+	{
+		try(PreparedStatement ps = getStatement(request))
+		{
+			for (int i = 0; i < args.length; i++)
+			{
+				ps.setObject(i+1, args[i]);
+			}
+			return ps.executeQuery();
 		}
 	}
 	/**
