@@ -7,7 +7,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import ru.sgk.reportmanager.ReportManager;
 import ru.sgk.reportmanager.data.Configuration;
-import ru.sgk.reportmanager.data.SQLManager;
+import ru.sgk.reportmanager.data.MySQLManager;
 
 public class ReportManagerCmd implements CommandExecutor 
 {
@@ -33,7 +33,7 @@ public class ReportManagerCmd implements CommandExecutor
 			if (args.length == 1 && args[0].equalsIgnoreCase("reload"))
 			{
 				Configuration.reload("config.yml", config);
-				SQLManager.closeConnection();
+				MySQLManager.closeConnection();
 				ReportManager.dbConnect();
 				sender.sendMessage("&aPlugin successfully reloaded!");
 			}

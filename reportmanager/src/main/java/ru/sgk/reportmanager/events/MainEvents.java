@@ -7,7 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import ru.sgk.reportmanager.data.Report;
-import ru.sgk.reportmanager.data.SQLManager;
+import ru.sgk.reportmanager.data.MySQLManager;
 
 public class MainEvents implements Listener {
 
@@ -16,7 +16,7 @@ public class MainEvents implements Listener {
 	{
 		Runnable task = () ->
 		{
-			List<Report> playerReportList = SQLManager.Requests.getPlayerReports(e.getPlayer().getName(), 1);
+			List<Report> playerReportList = MySQLManager.Requests.getPlayerReports(e.getPlayer().getName(), 1);
 			for (Report report : playerReportList)
 			{
 				if (report.isResponded() && !report.isChecked())

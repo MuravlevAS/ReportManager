@@ -11,6 +11,7 @@ import ru.sgk.reportmanager.cmds.ReportCmd;
 import ru.sgk.reportmanager.cmds.ReportManagerCmd;
 import ru.sgk.reportmanager.data.Configuration;
 import ru.sgk.reportmanager.data.SQLManager;
+import ru.sgk.reportmanager.data.MySQLManager;
 import ru.sgk.reportmanager.events.MainEvents;
 
 public class ReportManager extends JavaPlugin 
@@ -64,7 +65,7 @@ public class ReportManager extends JavaPlugin
     @Override
     public void onDisable() 
     {
-    	SQLManager.closeConnection();
+    	MySQLManager.closeConnection();
     	log("plugin was enabled");
     	Configuration.saveDefaultConfig();
     }
@@ -83,7 +84,7 @@ public class ReportManager extends JavaPlugin
     	String database = config.getString("database.database");
     	String user = config.getString("database.user");
     	String password = config.getString("database.password", "");
-    	SQLManager.connect(host, database, user, password);
-    	SQLManager.Requests.createTable();
+    	MySQLManager.connect(host, database, user, password);
+    	MySQLManager.Requests.createTable();
     }
 }

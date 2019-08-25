@@ -129,7 +129,7 @@ public class Report {
 				}
 			}
 			if (!ReportCmd.hasPermission(sender, "reportmanager.admin"))
-				SQLManager.Requests.checkReport(report.getId());
+				MySQLManager.Requests.checkReport(report.getId());
 		}
 		
 	}
@@ -137,7 +137,7 @@ public class Report {
 	{
 		Runnable task = () ->
 		{
-			Report report = SQLManager.Requests.getPlayerReports(reporterName, 1).get(0);
+			Report report = MySQLManager.Requests.getPlayerReports(reporterName, 1).get(0);
 			long id = report.getId();
 			for (Player player : Bukkit.getOnlinePlayers())
 			{
@@ -175,7 +175,7 @@ public class Report {
 	{
 		Runnable task = () ->
 		{
-			String name = SQLManager.Requests.getReport(id).getReporterPlayerName();
+			String name = MySQLManager.Requests.getReport(id).getReporterPlayerName();
 			try
 			{
 				Player p = Bukkit.getPlayer(name);

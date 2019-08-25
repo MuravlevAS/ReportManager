@@ -10,7 +10,7 @@ import java.util.List;
 
 import ru.sgk.reportmanager.ReportManager;
 
-public class SQLManager 
+public class MySQLManager 
 {
 	private static Connection connection;
 	public static class Requests

@@ -17,7 +17,7 @@ import com.google.common.io.ByteStreams;
 import ru.sgk.reportmanager.ReportManager;
 import ru.sgk.reportmanager.data.Configuration;
 import ru.sgk.reportmanager.data.Report;
-import ru.sgk.reportmanager.data.SQLManager;
+import ru.sgk.reportmanager.data.MySQLManager;
 
 public class ReportCmd implements CommandExecutor 
 {
@@ -66,7 +66,7 @@ public class ReportCmd implements CommandExecutor
 						{
 							try
 							{
-								reportList = SQLManager.Requests.getPlayerReports(sender.getName(), Integer.parseInt(args[1]));
+								reportList = MySQLManager.Requests.getPlayerReports(sender.getName(), Integer.parseInt(args[1]));
 							}
 							catch (NumberFormatException e)
 							{
@@ -77,7 +77,7 @@ public class ReportCmd implements CommandExecutor
 						}
 						else if (args.length == 1)
 						{
-							reportList = SQLManager.Requests.getPlayerReports(sender.getName(), 1);
+							reportList = MySQLManager.Requests.getPlayerReports(sender.getName(), 1);
 						}
 						Report.printReportList(sender, reportList);
 					};
@@ -101,7 +101,7 @@ public class ReportCmd implements CommandExecutor
 						{
 							try
 							{
-								reportList = SQLManager.Requests.getReports(Integer.parseInt(args[1]));
+								reportList = MySQLManager.Requests.getReports(Integer.parseInt(args[1]));
 							}
 							catch (NumberFormatException e)
 							{
@@ -111,7 +111,7 @@ public class ReportCmd implements CommandExecutor
 						}
 						else if (args.length == 1)
 						{
-							reportList = SQLManager.Requests.getReports(1);
+							reportList = MySQLManager.Requests.getReports(1);
 						}
 						Report.printReportList(sender, reportList);
 					};
@@ -137,7 +137,7 @@ public class ReportCmd implements CommandExecutor
 							int id = Integer.parseInt(args[1]);
 							// If db request has update at least one line, send notification to the player who sended report
 							// and response to admint that all was successful. Otherwise send admin 
-							boolean responded = SQLManager.Requests.sendResponse(id, s, sender.getName());
+							boolean responded = MySQLManager.Requests.sendResponse(id, s, sender.getName());
 							if (responded)
 							{
 								 
@@ -180,7 +180,7 @@ public class ReportCmd implements CommandExecutor
 					try
 					{
 						int id = Integer.parseInt(args[1]);
-						Report report = SQLManager.Requests.getReport(id);
+						Report report = MySQLManager.Requests.getReport(id);
 						// if player is not admin then, if he has permission, he can get ONLY his reports,
 						// others will give not permission meessage   
 						if (!hasPermission(sender, "reportmanager.admin"))
@@ -252,7 +252,7 @@ public class ReportCmd implements CommandExecutor
 					}
 					List<String> texts =  new ArrayList<String>();
 					texts.add(text);
-					long id = SQLManager.Requests.sendReport(sender.getName(), args[0], texts, toPlayer);
+					long id = MySQLManager.Requests.sendReport(sender.getName(), args[0], texts, toPlayer);
 					sender.sendMessage(Configuration.getString(config, "messages.report-sended").replaceAll("%id%", "" + id));
 					Report.notifyAdmin(id);
 					for (Player player : Bukkit.getOnlinePlayers())
